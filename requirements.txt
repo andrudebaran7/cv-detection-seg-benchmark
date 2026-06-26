@@ -1,0 +1,6 @@
+ultralytics>=8.3
+torch>=2.2
+streamlit>=1.40
+numpy>=1.26
+pillow>=10.0
+pytest>=8.0
