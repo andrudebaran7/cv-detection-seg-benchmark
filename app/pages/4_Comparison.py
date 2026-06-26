@@ -1,4 +1,3 @@
-import numpy as np
 import streamlit as st
 from PIL import Image
 
@@ -16,7 +15,6 @@ if file is not None and not (2 <= len(chosen) <= 3):
     st.warning("Pick between 2 and 3 detectors.")
 elif file is not None:
     image = Image.open(file).convert("RGB")
-    arr = np.array(image)
 
     loaders = {"YOLO11n": get_yolo, "RF-DETR-nano": get_rfdetr, "YOLO-World": get_yoloworld}
     models = {name: loaders[name]() for name in chosen}
@@ -27,7 +25,7 @@ elif file is not None:
         }
 
     with st.spinner("Running models..."):
-        results = run_comparison(arr, models, per_model_kwargs=per_kwargs)
+        results = run_comparison(image, models, per_model_kwargs=per_kwargs)
 
     cols = st.columns(len(results))
     for col, r in zip(cols, results):
