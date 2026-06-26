@@ -1,0 +1,4 @@
+model,map,latency_ms,note,device,image,measured_at
+YOLO11n,39.5,210.7,COCO val mAP (nano),CPU,bus.jpg,2026-06-27
+RF-DETR-nano,48.4,420.5,COCO val mAP (nano),CPU,bus.jpg,2026-06-27
+YOLO-World,35.4,377.4,LVIS zero-shot AP (small),CPU,bus.jpg,2026-06-27
