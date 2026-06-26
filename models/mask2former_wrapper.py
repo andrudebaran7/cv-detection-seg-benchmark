@@ -9,7 +9,7 @@ from models.base import DetectionSegModel, Prediction
 
 
 class Mask2FormerWrapper(DetectionSegModel):
-    def __init__(self, model_id: str = "facebook/mask2former-resnet50-coco-panoptic") -> None:
+    def __init__(self, model_id: str = "facebook/mask2former-swin-tiny-coco-panoptic") -> None:
         self.model_id = model_id
         self._model = None
 

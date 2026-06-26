@@ -32,8 +32,9 @@ patterns.
 
 - Python >= 3.9. Use the existing project venv `.venv`.
 - Repo license remains **AGPL-3.0**. New dep `transformers` is Apache-2.0 (compatible).
-- Mask2Former uses **`facebook/mask2former-resnet50-coco-panoptic`** (~170 MB) to fit
-  the Streamlit Community Cloud ~1 GB RAM budget. Swin-L is out of scope (too large).
+- Mask2Former uses **`facebook/mask2former-swin-tiny-coco-panoptic`** (~190 MB) to fit
+  the Streamlit Community Cloud ~1 GB RAM budget. (HuggingFace hosts no ResNet-50
+  Mask2Former; Swin-tiny is the smallest panoptic checkpoint. Swin-L is too large.)
 - All wrappers MUST **lazy-import** their backend (import inside methods).
 - Tests MUST **mock** the backend — never download weights in tests.
 - `Prediction` (from `models/base.py`) remains the only data contract.
@@ -48,7 +49,7 @@ patterns.
 ### `models/mask2former_wrapper.py`
 
 - `class Mask2FormerWrapper(DetectionSegModel)`,
-  `__init__(self, model_id: str = "facebook/mask2former-resnet50-coco-panoptic")`.
+  `__init__(self, model_id: str = "facebook/mask2former-swin-tiny-coco-panoptic")`.
 - `_load()` lazy-imports `transformers.AutoImageProcessor` and
   `transformers.Mask2FormerForUniversalSegmentation`, caches a `(processor, model)`
   tuple on `self._model`.

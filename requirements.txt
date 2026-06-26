@@ -5,6 +5,7 @@ numpy>=1.26
 pillow>=10.0
 rfdetr>=1.8
 supervision>=0.20
+transformers>=4.40
 # CLIP backbone for YOLO-World (open-vocabulary); pre-installed to avoid
 # ultralytics' runtime AutoUpdate delay on first inference.
 ftfy
