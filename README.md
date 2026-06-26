@@ -36,12 +36,13 @@ so the app is independent of the concrete model. A later milestone adds RF-DETR-
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt   # GPU/CUDA torch
+.venv/bin/pip install -r requirements-dev.txt   # runtime + pytest (CPU torch)
 .venv/bin/streamlit run app/main.py
 ```
 
 Weights download automatically on first use. Two sample images live in
-`data/sample_images/`.
+`data/sample_images/`. `requirements.txt` holds the CPU-only runtime deps;
+`requirements-dev.txt` adds `pytest` for the test suite.
 
 ## Tests
 
@@ -53,14 +54,14 @@ Tests mock the underlying models (no weight downloads), so the suite is fast:
 
 ## Deploy to Streamlit Community Cloud
 
-Use `requirements-light.txt` (CPU-only torch) to stay within the ~1 GB RAM limit:
+Streamlit Community Cloud reads `requirements.txt` at the repo root (already CPU-only).
+On [share.streamlit.io](https://share.streamlit.io): pick this repo, branch `main`, and
+main file path `app/main.py`.
 
-```bash
-.venv/bin/pip install -r requirements-light.txt
-```
-
-Point the Streamlit Cloud app at `app/main.py` and set the requirements file to
-`requirements-light.txt`.
+**Memory note:** the free tier provides ~1 GB RAM. Single-model pages (Detection,
+Segmentation, Open-Vocabulary) fit comfortably; the Comparison and Benchmark pages load
+two or three detectors at once and may approach the limit — run them with the lighter
+models if you hit a resource error.
 
 ## Architecture
 

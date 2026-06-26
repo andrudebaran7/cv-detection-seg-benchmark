@@ -1,3 +1,6 @@
+# Deploy/runtime dependencies. Streamlit Community Cloud reads THIS file.
+# CPU-only torch (Streamlit Cloud has no GPU) keeps the image small.
+--extra-index-url https://download.pytorch.org/whl/cpu
 ultralytics>=8.3
 torch>=2.2
 streamlit>=1.40
@@ -10,4 +13,3 @@ transformers>=4.40
 # ultralytics' runtime AutoUpdate delay on first inference.
 ftfy
 clip @ git+https://github.com/ultralytics/CLIP.git
-pytest>=8.0

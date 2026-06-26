@@ -1,0 +1,6 @@
+[server]
+# Keep uploads small to protect the limited Streamlit Cloud memory budget.
+maxUploadSize = 10
+
+[theme]
+base = "light"
