@@ -1,3 +1,5 @@
+import _pathsetup  # noqa: F401  (puts repo root on sys.path under `streamlit run`)
+
 import streamlit as st
 from PIL import Image
 
