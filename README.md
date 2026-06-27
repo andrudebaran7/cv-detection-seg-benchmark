@@ -54,8 +54,10 @@ Tests mock the underlying models (no weight downloads), so the suite is fast:
 
 ## Deploy to Streamlit Community Cloud
 
-Streamlit Community Cloud reads `requirements.txt` at the repo root (already CPU-only).
-On [share.streamlit.io](https://share.streamlit.io): pick this repo, branch `main`, and
+Streamlit Community Cloud reads `requirements.txt` (Python deps) and `packages.txt`
+(system deps) at the repo root. `packages.txt` installs `libgl1`/`libglib2.0-0`, which
+OpenCV (pulled in by `ultralytics`) needs on the headless Cloud image. On
+[share.streamlit.io](https://share.streamlit.io): pick this repo, branch `main`, and
 main file path `app/main.py`.
 
 **Memory note:** the free tier provides ~1 GB RAM. Single-model pages (Detection,
