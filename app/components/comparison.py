@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
-from models.base import DetectionSegModel, Prediction
+from models.base import Prediction
 from app.components.visualization import draw_prediction
 
 
@@ -16,12 +16,20 @@ class ComparisonResult:
 
 def run_comparison(
     image: Any,
-    models: "dict[str, DetectionSegModel]",
+    specs: "list[tuple[str, str]]",
+    loader: Callable[[str], Any],
     per_model_kwargs: "dict[str, dict] | None" = None,
 ) -> "list[ComparisonResult]":
+    """Run several detectors on one image, one model at a time.
+
+    `specs` is a list of ``(display_name, model_key)``. `loader(key)` returns the
+    model for that key; it is expected to be the single-slot loader, so each call
+    evicts the previously loaded model and only one is resident at a time.
+    """
     per_model_kwargs = per_model_kwargs or {}
     results: list[ComparisonResult] = []
-    for name, model in models.items():
+    for name, key in specs:
+        model = loader(key)
         kwargs = per_model_kwargs.get(name, {})
         prediction = model.predict(image, **kwargs)
         rendered = draw_prediction(image, prediction)

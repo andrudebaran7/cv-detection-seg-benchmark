@@ -3,13 +3,18 @@ import _pathsetup  # noqa: F401  (puts repo root on sys.path under `streamlit ru
 import streamlit as st
 from PIL import Image
 
-from app.components.model_runner import get_yolo, get_rfdetr, get_yoloworld
+from app.components.model_runner import load_model
 from app.components.comparison import run_comparison
 
 st.title("Comparison")
+st.caption("Detectors run one at a time (one model in memory at a time) to fit Streamlit Cloud.")
 
-ALL = ["YOLO11n", "RF-DETR-nano", "YOLO-World"]
-chosen = st.multiselect("Detectors (pick 2–3)", ALL, default=["YOLO11n", "RF-DETR-nano"])
+# (display name, model key)
+ALL = [("YOLO11n", "yolo"), ("RF-DETR-nano", "rfdetr"), ("YOLO-World", "yoloworld")]
+NAME_TO_KEY = dict(ALL)
+
+chosen = st.multiselect("Detectors (pick 2–3)", [n for n, _ in ALL],
+                        default=["YOLO11n", "RF-DETR-nano"])
 wc_classes = st.text_input("YOLO-World classes (comma-separated)", "person, car")
 file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
 
@@ -18,16 +23,15 @@ if file is not None and not (2 <= len(chosen) <= 3):
 elif file is not None:
     image = Image.open(file).convert("RGB")
 
-    loaders = {"YOLO11n": get_yolo, "RF-DETR-nano": get_rfdetr, "YOLO-World": get_yoloworld}
-    models = {name: loaders[name]() for name in chosen}
+    specs = [(name, NAME_TO_KEY[name]) for name in chosen]
     per_kwargs = {}
-    if "YOLO-World" in models:
+    if "YOLO-World" in chosen:
         per_kwargs["YOLO-World"] = {
             "classes": [c.strip() for c in wc_classes.split(",") if c.strip()]
         }
 
-    with st.spinner("Running models..."):
-        results = run_comparison(image, models, per_model_kwargs=per_kwargs)
+    with st.spinner("Running models one at a time..."):
+        results = run_comparison(image, specs, load_model, per_model_kwargs=per_kwargs)
 
     cols = st.columns(len(results))
     for col, r in zip(cols, results):

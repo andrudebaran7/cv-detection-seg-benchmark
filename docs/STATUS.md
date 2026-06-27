@@ -59,14 +59,34 @@ Deployed from `main`, entry `app/main.py`. Deploy-readiness work done:
 3. `ImportError: libgthread-2.0.so.0` — next cv2 dep; on Debian trixie the package is
    `libglib2.0-0t64` (time64), not `libglib2.0-0`. Fixed (`8f0511d`).
 
-## Open issues / known limitations
+## Memory / OOM mitigation (2026-06-27)
 
-- **Free-tier RAM (~1 GB) OOM.** Loading the heaviest models together (RF-DETR 349 MB +
-  Mask2Former ~190 MB + others) crashes the app ("Oh no. Error running app"). Single-model
-  pages fit; the Comparison/Benchmark pages with 2 light detectors fit; 3 heavy models do
-  not. Documented in the README deploy note.
-- **App was rebooted** after an OOM crash during live testing; it auto-recovers ("in the
-  oven") but heavy pages will OOM again on the free tier.
+`app/components/model_runner.py` now uses a **single-slot loader**: at most one model is
+held in memory at a time. Requesting a different model evicts the previous one
+(`load_model(key)` / `_load_into_slot`). Crucially, eviction calls `gc.collect()` **and
+`malloc_trim(0)`** — dropping a reference + gc alone does NOT lower RSS (CPU torch and
+glibc retain freed memory in their own pools). The Comparison and Benchmark pages now
+load-run-release detectors **one at a time** via `load_model`.
+
+Measured on the dev machine (CPU), loading the three detectors in sequence:
+
+| step | RSS (resident) | after evict + `malloc_trim` |
+|------|----------------|------------------------------|
+| YOLO11n | ~439 MB | ~410 MB (framework floor) |
+| RF-DETR-nano | ~986 MB | ~523 MB |
+| YOLO-World | ~1337 MB | ~557 MB |
+
+So `malloc_trim` reclaims each model's weights after use — this removes the **additive
+accumulation** that caused the live OOM (models piling up across page visits).
+
+**Remaining limitation (honest):** the framework floor grows as torch / ultralytics /
+rfdetr / transformers / CLIP get imported, and the heaviest single models (RF-DETR
+~986 MB resident, YOLO-World ~1337 MB with all frameworks imported; load transients
+peaked ~1960 MB) can still approach or exceed the ~1 GB free tier on their own. So:
+- Single-model pages (Detection, Segmentation, Open-Vocabulary) are reliable on free tier.
+- Comparison/Benchmark now run bounded (one model at a time) and no longer accumulate, but
+  the full 3-heavy-detector run may still exceed 1 GB. For reliable heavy comparison, use a
+  paid tier or pick the lighter detectors.
 - **Detection live upload not yet exercised.** The Streamlit file uploader runs inside an
   iframe, so browser automation can't reach the `<input type=file>`; the upload tool also
   only accepts session-shared files. The Detection model path itself is already proven

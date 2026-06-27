@@ -61,10 +61,13 @@ Streamlit Community Cloud reads `requirements.txt` (Python deps) and `packages.t
 [share.streamlit.io](https://share.streamlit.io): pick this repo, branch `main`, and
 main file path `app/main.py`.
 
-**Memory note:** the free tier provides ~1 GB RAM. Single-model pages (Detection,
-Segmentation, Open-Vocabulary) fit comfortably; the Comparison and Benchmark pages load
-two or three detectors at once and may approach the limit — run them with the lighter
-models if you hit a resource error.
+**Memory note:** the free tier provides ~1 GB RAM. The app uses a single-slot model
+loader (`app/components/model_runner.py`): only one model is kept in memory at a time, and
+eviction calls `gc.collect()` + `malloc_trim` to return freed memory to the OS. The
+Comparison and Benchmark pages therefore run detectors one at a time rather than holding
+them all. Single-model pages (Detection, Segmentation, Open-Vocabulary) fit comfortably;
+the full 3-heavy-detector Comparison/Benchmark can still approach the limit — pick the
+lighter detectors or use a paid tier if you hit a resource error.
 
 ## Architecture
 
