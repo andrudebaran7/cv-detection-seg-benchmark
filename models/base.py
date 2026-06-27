@@ -16,6 +16,11 @@ class Box:
         y2: Bottom (or maximum) y coordinate.
     """
 
+    x1: float
+    y1: float
+    x2: float
+    y2: float
+
 
 @dataclass
 class Prediction:
