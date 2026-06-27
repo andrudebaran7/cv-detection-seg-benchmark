@@ -8,6 +8,12 @@ Interactive comparison of object **detection** and image **segmentation** models
 through a single unified interface, with a Streamlit demo. Built to fit
 Streamlit Community Cloud (nano/tiny models only).
 
+**[Live demo →](https://cv-detection-seg-benchmark-au.streamlit.app/)**
+
+![Demo](docs/demo.gif)
+
+_Tour of the five pages, ending with a live latency-vs-mAP benchmark run._
+
 ## Models
 
 | Model | Task | Weights | Source |
