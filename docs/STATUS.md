@@ -79,14 +79,17 @@ Measured on the dev machine (CPU), loading the three detectors in sequence:
 So `malloc_trim` reclaims each model's weights after use — this removes the **additive
 accumulation** that caused the live OOM (models piling up across page visits).
 
-**Remaining limitation (honest):** the framework floor grows as torch / ultralytics /
-rfdetr / transformers / CLIP get imported, and the heaviest single models (RF-DETR
-~986 MB resident, YOLO-World ~1337 MB with all frameworks imported; load transients
-peaked ~1960 MB) can still approach or exceed the ~1 GB free tier on their own. So:
-- Single-model pages (Detection, Segmentation, Open-Vocabulary) are reliable on free tier.
-- Comparison/Benchmark now run bounded (one model at a time) and no longer accumulate, but
-  the full 3-heavy-detector run may still exceed 1 GB. For reliable heavy comparison, use a
-  paid tier or pick the lighter detectors.
+**Live re-test (2026-06-27):** with the single-slot + `malloc_trim` mitigation deployed,
+the Benchmark page ran **all three heavy detectors** (YOLO11n + RF-DETR-nano + YOLO-World)
+one at a time **without OOM** — the same combo that crashed before. Measured on Cloud CPU:
+YOLO11n 39.5 mAP / 188 ms, YOLO-World 35.4 / ~330 ms, RF-DETR-nano 48.4 / 686 ms. The
+upload cap was also lowered to 5 MB.
+
+**Remaining caveat:** the framework floor still grows as torch / ultralytics / rfdetr /
+transformers / CLIP get imported, and load transients are large, so headroom on the free
+tier is thin — concurrent users or repeated heavy runs could still hit the limit. Single-
+model pages are comfortable; the heavy Comparison/Benchmark works but with little margin
+(a paid tier removes the risk).
 - **Detection live upload not yet exercised.** The Streamlit file uploader runs inside an
   iframe, so browser automation can't reach the `<input type=file>`; the upload tool also
   only accepts session-shared files. The Detection model path itself is already proven
