@@ -55,8 +55,9 @@ Tests mock the underlying models (no weight downloads), so the suite is fast:
 ## Deploy to Streamlit Community Cloud
 
 Streamlit Community Cloud reads `requirements.txt` (Python deps) and `packages.txt`
-(system deps) at the repo root. `packages.txt` installs `libgl1`, which provides
-`libGL.so.1` for OpenCV (pulled in by `ultralytics`) on the headless Cloud image. On
+(system deps) at the repo root. `packages.txt` installs `libgl1` and
+`libglib2.0-0t64`, which provide `libGL.so.1` and `libgthread-2.0.so.0` for OpenCV
+(pulled in by `ultralytics`) on the headless Debian-trixie Cloud image. On
 [share.streamlit.io](https://share.streamlit.io): pick this repo, branch `main`, and
 main file path `app/main.py`.
 
