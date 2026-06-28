@@ -6,8 +6,9 @@ benchmark sin atarse a un solo modelo. Dos patrones, ambos **cross-family**
 
 | Comando | Patrón | Para qué |
 |---|---|---|
-| `moa`   | **Mixture-of-Agents** (consenso) | N expertos responden en paralelo → un sintetizador combina. Decisiones de diseño/arquitectura. |
-| `audit` | **Worker + Auditor con retry** | Un worker propone, un auditor de otra familia revisa (APROBADO/CAMBIOS) y se reintenta o escala. Verificar código/decisiones antes de aceptarlas. |
+| `moa`       | **Mixture-of-Agents** (consenso) | N expertos responden en paralelo → un sintetizador combina. Decisiones de diseño/arquitectura. |
+| `audit`     | **Worker + Auditor con retry** | Un worker propone, un auditor de otra familia revisa (APROBADO/CAMBIOS) y se reintenta o escala. Verificar código/decisiones antes de aceptarlas. |
+| `peer-rank` | **Evaluación cruzada** (Borda) | N expertos responden y cada uno rankea a los demás (anonimizado, sin auto-voto) → ranking de consenso + ganador. Saber QUÉ respuesta es mejor. |
 
 > Es una herramienta **auxiliar/experimental** del repo (no toca el pipeline de
 > modelos). Vive aislada en `tools/agent_council/` con sus propias dependencias.
@@ -38,6 +39,9 @@ python -m venv .venv
 
 # Auditoría con retry de una implementación
 .venv/bin/python council.py audit "Implementa NMS vectorizado en numpy para cajas xyxy."
+
+# Evaluación cruzada (peer-rank) de una decisión
+.venv/bin/python council.py peer-rank "¿Mejor estrategia de data augmentation para YOLO-nano?"
 ```
 
 Sin argumentos, cada comando usa una pregunta/tarea de ejemplo del dominio del repo.
