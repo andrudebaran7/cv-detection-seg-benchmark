@@ -9,8 +9,13 @@ from models.base import DetectionSegModel, Prediction
 
 
 class Mask2FormerWrapper(DetectionSegModel):
-    def __init__(self, model_id: str = "facebook/mask2former-swin-tiny-coco-panoptic") -> None:
+    def __init__(
+        self,
+        model_id: str = "facebook/mask2former-swin-tiny-coco-panoptic",
+        device: str | None = None,
+    ) -> None:
         self.model_id = model_id
+        self.device = device
         self._model = None
 
     def _load(self):
@@ -22,6 +27,8 @@ class Mask2FormerWrapper(DetectionSegModel):
 
             processor = AutoImageProcessor.from_pretrained(self.model_id)
             model = Mask2FormerForUniversalSegmentation.from_pretrained(self.model_id)
+            if self.device is not None:
+                model.to(self.device)
             self._model = (processor, model)
         return self._model
 
@@ -32,6 +39,8 @@ class Mask2FormerWrapper(DetectionSegModel):
 
         start = time.perf_counter()
         inputs = processor(images=image, return_tensors="pt")
+        if self.device is not None:
+            inputs = inputs.to(self.device)
         outputs = model(**inputs)
         result = processor.post_process_panoptic_segmentation(
             outputs, target_sizes=[(height, width)]

@@ -7,8 +7,9 @@ from models.base import Box, DetectionSegModel, Prediction
 
 
 class YoloWrapper(DetectionSegModel):
-    def __init__(self, weights: str = "yolo11n.pt") -> None:
+    def __init__(self, weights: str = "yolo11n.pt", device: str | None = None) -> None:
         self.weights = weights
+        self.device = device
         self._model = None
 
     def _load(self):
@@ -21,7 +22,7 @@ class YoloWrapper(DetectionSegModel):
     def predict(self, image: Any, conf: float = 0.25, **kwargs: Any) -> Prediction:
         model = self._load()
         start = time.perf_counter()
-        results = model(image, conf=conf, verbose=False)
+        results = model(image, conf=conf, device=self.device, verbose=False)
         latency_ms = (time.perf_counter() - start) * 1000.0
 
         result = results[0]

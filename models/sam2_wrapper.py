@@ -7,8 +7,9 @@ from models.base import DetectionSegModel, Prediction
 
 
 class Sam2Wrapper(DetectionSegModel):
-    def __init__(self, weights: str = "sam2.1_t.pt") -> None:
+    def __init__(self, weights: str = "sam2.1_t.pt", device: str | None = None) -> None:
         self.weights = weights
+        self.device = device
         self._model = None
 
     def _load(self):
@@ -30,7 +31,7 @@ class Sam2Wrapper(DetectionSegModel):
 
         model = self._load()
         start = time.perf_counter()
-        results = model(image, points=points, bboxes=bboxes, verbose=False)
+        results = model(image, points=points, bboxes=bboxes, device=self.device, verbose=False)
         latency_ms = (time.perf_counter() - start) * 1000.0
 
         result = results[0]

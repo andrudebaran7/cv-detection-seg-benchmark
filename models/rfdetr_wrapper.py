@@ -23,15 +23,17 @@ COCO_CLASSES = [
 
 
 class RfDetrWrapper(DetectionSegModel):
-    def __init__(self, model_name: str = "nano") -> None:
+    def __init__(self, model_name: str = "nano", device: str | None = None) -> None:
         self.model_name = model_name
+        self.device = device
         self._model = None
 
     def _load(self):
         if self._model is None:
             import rfdetr  # lazy import
 
-            self._model = rfdetr.RFDETRNano()
+            kwargs = {"device": self.device} if self.device is not None else {}
+            self._model = rfdetr.RFDETRNano(**kwargs)
         return self._model
 
     def predict(self, image: Any, threshold: float = 0.5, **kwargs: Any) -> Prediction:
