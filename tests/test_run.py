@@ -59,6 +59,25 @@ def _boom_spec():
     return ModelSpec("boom", "detection", _factory, lambda img: {})
 
 
+class _FlakyModel:
+    """Succeeds at the first resolution, then raises — to exercise mid-sweep failure."""
+    seen_sizes: set = set()
+
+    def __init__(self, device=None):
+        self.device = device
+
+    def predict(self, image, **kwargs):
+        if image.size[0] >= 640:
+            raise RuntimeError("simulated mid-sweep failure at higher resolution")
+        class P:
+            latency_ms = 1.0
+        return P()
+
+
+def _flaky_spec():
+    return ModelSpec("flaky", "detection", lambda device: _FlakyModel(device), lambda img: {})
+
+
 def test_main_isolates_per_model_failure(tmp_path, monkeypatch):
     # One failing model must not abort the campaign: the good model's rows are
     # still written, and the run does not raise.
@@ -72,3 +91,15 @@ def test_main_isolates_per_model_failure(tmp_path, monkeypatch):
     with open(out_csv) as f:
         models = {row["model"] for row in csv.DictReader(f)}
     assert models == {"fake"}  # boom skipped, fake survived
+
+
+def test_main_rolls_back_partial_rows_on_midsweep_failure(tmp_path, monkeypatch):
+    # A model that runs at 320 but fails at 640 must leave NO rows (skipped == no data).
+    monkeypatch.setattr(run, "REGISTRY", {"flaky": _flaky_spec(), "fake": _fake_spec()})
+    monkeypatch.setattr(run, "load_images", lambda: [Image.new("RGB", (64, 64))])
+    monkeypatch.setattr(run, "RESOLUTIONS", [320, 640])
+    run.main(["--device", "cpu", "--models", "all", "--iters", "2",
+              "--warmup", "1", "--out", str(tmp_path)])
+    with open(tmp_path / "results_cpu.csv") as f:
+        models = {row["model"] for row in csv.DictReader(f)}
+    assert models == {"fake"}  # flaky's partial 320 rows rolled back

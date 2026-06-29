@@ -80,17 +80,20 @@ def main(argv=None):
     failed = {}
     for key in keys:
         spec = REGISTRY[key]
+        mark = len(rows)  # roll back to here if this model fails mid-sweep
         try:
             for resolution in RESOLUTIONS:
                 rows.extend(run_model(spec, base, device=args.device,
                                       resolution=resolution, iters=args.iters, warmup=args.warmup))
         except Exception as exc:  # one model's failure must not abort the whole campaign
+            del rows[mark:]  # drop any partial rows so a skipped model leaves none
             failed[key] = repr(exc)
             print(f"[skip] {key}: {exc}")
 
     write_csv(rows, out / f"results_{args.device}.csv")
     with open(out / f"manifest_{args.device}.json", "w") as f:
         json.dump(build_manifest(args.device), f, indent=2)
+        f.write("\n")
     if failed:
         print(f"Completed with {len(failed)} model(s) failed: {', '.join(failed)}")
 
