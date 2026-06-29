@@ -77,15 +77,22 @@ def main(argv=None):
     base = imgs[0]  # resolution sweep uses one base image (B4)
 
     rows = []
+    failed = {}
     for key in keys:
         spec = REGISTRY[key]
-        for resolution in RESOLUTIONS:
-            rows.extend(run_model(spec, base, device=args.device,
-                                  resolution=resolution, iters=args.iters, warmup=args.warmup))
+        try:
+            for resolution in RESOLUTIONS:
+                rows.extend(run_model(spec, base, device=args.device,
+                                      resolution=resolution, iters=args.iters, warmup=args.warmup))
+        except Exception as exc:  # one model's failure must not abort the whole campaign
+            failed[key] = repr(exc)
+            print(f"[skip] {key}: {exc}")
 
     write_csv(rows, out / f"results_{args.device}.csv")
     with open(out / f"manifest_{args.device}.json", "w") as f:
         json.dump(build_manifest(args.device), f, indent=2)
+    if failed:
+        print(f"Completed with {len(failed)} model(s) failed: {', '.join(failed)}")
 
 
 if __name__ == "__main__":

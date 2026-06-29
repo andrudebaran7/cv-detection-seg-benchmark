@@ -51,3 +51,24 @@ def test_main_writes_csv_and_manifest(tmp_path, monkeypatch):
               "--warmup", "1", "--out", str(tmp_path)])
     assert (tmp_path / "results_cpu.csv").exists()
     assert (tmp_path / "manifest_cpu.json").exists()
+
+
+def _boom_spec():
+    def _factory(device):
+        raise RuntimeError("model load failed (simulated transient)")
+    return ModelSpec("boom", "detection", _factory, lambda img: {})
+
+
+def test_main_isolates_per_model_failure(tmp_path, monkeypatch):
+    # One failing model must not abort the campaign: the good model's rows are
+    # still written, and the run does not raise.
+    monkeypatch.setattr(run, "REGISTRY", {"boom": _boom_spec(), "fake": _fake_spec()})
+    monkeypatch.setattr(run, "load_images", lambda: [Image.new("RGB", (64, 64))])
+    monkeypatch.setattr(run, "RESOLUTIONS", [320])
+    run.main(["--device", "cpu", "--models", "all", "--iters", "2",
+              "--warmup", "1", "--out", str(tmp_path)])
+    out_csv = tmp_path / "results_cpu.csv"
+    assert out_csv.exists()
+    with open(out_csv) as f:
+        models = {row["model"] for row in csv.DictReader(f)}
+    assert models == {"fake"}  # boom skipped, fake survived
