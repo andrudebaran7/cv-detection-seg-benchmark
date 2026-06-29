@@ -1,0 +1,53 @@
+from __future__ import annotations
+
+import csv
+
+import matplotlib
+matplotlib.use("Agg")  # headless
+import matplotlib.pyplot as plt  # noqa: E402
+
+
+def load_rows(path) -> list[dict]:
+    rows = []
+    with open(path) as f:
+        for r in csv.DictReader(f):
+            r["resolution"] = int(r["resolution"])
+            r["value"] = float(r["value"])
+            rows.append(r)
+    return rows
+
+
+def _filter(rows, **eq):
+    return [r for r in rows if all(r[k] == v for k, v in eq.items())]
+
+
+def plot_cpu_vs_gpu(rows, out_path):
+    sel = _filter(rows, experiment="warm_latency", metric="mean_ms", resolution=640)
+    models = sorted({r["model"] for r in sel})
+    fig, ax = plt.subplots()
+    for i, device in enumerate(["cpu", "cuda"]):
+        vals = [next((r["value"] for r in sel if r["model"] == m and r["device"] == device), 0.0)
+                for m in models]
+        ax.bar([x + i * 0.4 for x in range(len(models))], vals, width=0.4, label=device)
+    ax.set_xticks([x + 0.2 for x in range(len(models))])
+    ax.set_xticklabels(models, rotation=30, ha="right")
+    ax.set_ylabel("warm latency (ms), res 640")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+
+
+def plot_scaling(rows, out_path):
+    sel = _filter(rows, experiment="warm_latency", metric="mean_ms")
+    fig, ax = plt.subplots()
+    for model in sorted({r["model"] for r in sel}):
+        pts = sorted((r["resolution"], r["value"]) for r in sel if r["model"] == model)
+        if pts:
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", label=model)
+    ax.set_xlabel("resolution (px)")
+    ax.set_ylabel("warm latency (ms)")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
