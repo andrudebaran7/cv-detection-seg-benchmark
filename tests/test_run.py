@@ -31,6 +31,22 @@ def test_run_model_emits_rows_for_each_experiment():
         assert isinstance(r["value"], float)
 
 
+def test_run_model_uses_gpu_memory_on_cuda(monkeypatch):
+    # On cuda the memory row must come from CUDA VRAM (peak_gpu/gpu_mem_mb), not host RSS,
+    # and CUDA peak tracking must be reset before the warm run.
+    called = {"reset": 0}
+    monkeypatch.setattr(run, "reset_peak_gpu", lambda: called.__setitem__("reset", called["reset"] + 1))
+    monkeypatch.setattr(run, "peak_gpu_mb", lambda: 123.0)
+    img = Image.new("RGB", (640, 480))
+    rows = run.run_model(_fake_spec(), img, device="cuda", resolution=640, iters=2, warmup=1)
+    mem_rows = [r for r in rows if r["experiment"] in ("peak_gpu", "peak_rss")]
+    assert len(mem_rows) == 1
+    assert mem_rows[0]["experiment"] == "peak_gpu"
+    assert mem_rows[0]["metric"] == "gpu_mem_mb"
+    assert mem_rows[0]["value"] == 123.0
+    assert called["reset"] == 1
+
+
 def test_write_csv_has_fixed_header(tmp_path):
     rows = [{"device": "cpu", "model": "fake", "task": "detection", "image": "x",
              "resolution": 640, "experiment": "warm_latency", "metric": "mean_ms",

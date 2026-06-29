@@ -8,7 +8,13 @@ import pathlib
 
 from benchmark.images import RESOLUTIONS, load_images, resize
 from benchmark.manifest import build_manifest
-from benchmark.measure import peak_rss_mb, time_first_call_ms, timeit_callable
+from benchmark.measure import (
+    peak_gpu_mb,
+    peak_rss_mb,
+    reset_peak_gpu,
+    time_first_call_ms,
+    timeit_callable,
+)
 from benchmark.models_registry import REGISTRY
 
 _COLUMNS = ["device", "model", "task", "image", "resolution",
@@ -34,12 +40,15 @@ def run_model(spec, image, *, device, resolution, iters, warmup):
         lambda: cold_model.predict(img, **spec.predict_kwargs(img))
     )
     rows.append(_row(spec, device, resolution, "cold_start", "first_call_ms", cold_ms, 1))
+    del cold_model  # free the cold instance so the memory reading isolates the warm model
 
     # Warm model reused for B1/B3/B5.
     model = spec.factory(device)
     kwargs = spec.predict_kwargs(img)
     call = lambda: model.predict(img, **kwargs)
 
+    # B5 memory: reset CUDA peak tracking so the warm run's peak is isolated (no-op on CPU).
+    reset_peak_gpu()
     stats = timeit_callable(call, warmup=warmup, iters=iters)
     rows.append(_row(spec, device, resolution, "warm_latency", "mean_ms", stats["mean_ms"], iters))
     rows.append(_row(spec, device, resolution, "warm_latency", "median_ms", stats["median_ms"], iters))
@@ -48,7 +57,11 @@ def run_model(spec, image, *, device, resolution, iters, warmup):
     throughput = 1000.0 / stats["mean_ms"] if stats["mean_ms"] > 0 else 0.0
     rows.append(_row(spec, device, resolution, "throughput", "imgs_per_sec", throughput, iters))
 
-    rows.append(_row(spec, device, resolution, "peak_rss", "rss_mb", peak_rss_mb(), iters))
+    # Device-appropriate memory: host RSS on CPU, peak CUDA VRAM on GPU (spec B5).
+    if device == "cuda":
+        rows.append(_row(spec, device, resolution, "peak_gpu", "gpu_mem_mb", peak_gpu_mb(), 1))
+    else:
+        rows.append(_row(spec, device, resolution, "peak_rss", "rss_mb", peak_rss_mb(), 1))
     return rows
 
 

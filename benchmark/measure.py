@@ -31,3 +31,24 @@ def time_first_call_ms(fn: Callable[[], object]) -> float:
 
 def peak_rss_mb() -> float:
     return psutil.Process().memory_info().rss / (1024 * 1024)
+
+
+def reset_peak_gpu() -> None:
+    """Reset CUDA peak-memory tracking so the next measurement is isolated. No-op on CPU."""
+    try:
+        import torch
+    except Exception:
+        return
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
+
+
+def peak_gpu_mb() -> float:
+    """Peak CUDA memory allocated (MB) since the last reset; 0.0 when no GPU is present."""
+    try:
+        import torch
+    except Exception:
+        return 0.0
+    if not torch.cuda.is_available():
+        return 0.0
+    return torch.cuda.max_memory_allocated() / (1024 * 1024)
