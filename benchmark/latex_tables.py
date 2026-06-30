@@ -13,7 +13,7 @@ def _fmt(v, ndigits=0):
 
 def latency_table(rows, task, label) -> str:
     lines = [
-        r"\begin{table}[ht]", r"\centering",
+        r"\begin{table*}[ht]", r"\centering",
         rf"\caption{{Measured warm inference latency (this work) at {_RES}px for "
         rf"{task} models: CPU vs.\ GPU, with CPU throughput.}}",
         rf"\label{{{label}}}", r"\small",
@@ -28,13 +28,13 @@ def latency_table(rows, task, label) -> str:
         thr = value_for(rows, device="cpu", model=model, experiment="throughput",
                         metric="imgs_per_sec", resolution=_RES)
         lines.append(rf"{model} & {_fmt(cpu)} & {_fmt(gpu)} & {_fmt(thr, 2)} \\")
-    lines += [r"\bottomrule", r"\end{tabularx}", r"\end{table}"]
+    lines += [r"\bottomrule", r"\end{tabularx}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
 
 
 def coldwarm_table(rows, task, label) -> str:
     lines = [
-        r"\begin{table}[ht]", r"\centering",
+        r"\begin{table*}[ht]", r"\centering",
         rf"\caption{{Cold-start (first call, incl.\ load) vs.\ warm median latency at {_RES}px "
         rf"for {task} models (this work, CPU).}}",
         rf"\label{{{label}}}", r"\small",
@@ -47,13 +47,13 @@ def coldwarm_table(rows, task, label) -> str:
         warm = value_for(rows, device="cpu", model=model, experiment="warm_latency",
                          metric="median_ms", resolution=_RES)
         lines.append(rf"{model} & {_fmt(cold)} & {_fmt(warm)} \\")
-    lines += [r"\bottomrule", r"\end{tabularx}", r"\end{table}"]
+    lines += [r"\bottomrule", r"\end{tabularx}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
 
 
 def memory_table(rows, label) -> str:
     lines = [
-        r"\begin{table}[ht]", r"\centering",
+        r"\begin{table*}[ht]", r"\centering",
         rf"\caption{{Peak memory at {_RES}px (this work): host RSS on CPU, CUDA VRAM on GPU.}}",
         rf"\label{{{label}}}", r"\small",
         r"\begin{tabularx}{\linewidth}{@{}Xrr@{}}", r"\toprule",
@@ -66,5 +66,5 @@ def memory_table(rows, label) -> str:
         vram = value_for(rows, device="cuda", model=model, experiment="peak_gpu",
                          metric="gpu_mem_mb", resolution=_RES)
         lines.append(rf"{model} & {_fmt(rss)} & {_fmt(vram)} \\")
-    lines += [r"\bottomrule", r"\end{tabularx}", r"\end{table}"]
+    lines += [r"\bottomrule", r"\end{tabularx}", r"\end{table*}"]
     return "\n".join(lines) + "\n"
