@@ -30,3 +30,15 @@ def test_plot_scaling_writes_file(tmp_path):
     out = tmp_path / "scaling.png"
     plot.plot_scaling(plot.load_rows(p), out)
     assert out.exists() and out.stat().st_size > 0
+
+
+def test_plot_memory_scaling_writes_file(tmp_path):
+    rows = [
+        {"device": "cpu", "model": "yolo11n", "task": "detection", "resolution": 320,
+         "experiment": "peak_rss", "metric": "rss_mb", "value": 430.0},
+        {"device": "cpu", "model": "yolo11n", "task": "detection", "resolution": 640,
+         "experiment": "peak_rss", "metric": "rss_mb", "value": 468.0},
+    ]
+    out = tmp_path / "mem.png"
+    plot.plot_memory_scaling(rows, out)
+    assert out.exists() and out.stat().st_size > 0

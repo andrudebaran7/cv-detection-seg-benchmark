@@ -51,3 +51,21 @@ def plot_scaling(rows, out_path):
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
+
+
+def plot_memory_scaling(rows, out_path):
+    mem = [r for r in rows if r["experiment"] in ("peak_rss", "peak_gpu")]
+    fig, ax = plt.subplots()
+    for device in sorted({r["device"] for r in mem}):
+        for model in sorted({r["model"] for r in mem if r["device"] == device}):
+            pts = sorted((r["resolution"], r["value"]) for r in mem
+                         if r["device"] == device and r["model"] == model)
+            if pts:
+                ax.plot([p[0] for p in pts], [p[1] for p in pts],
+                        marker="o", label=f"{model} ({device})")
+    ax.set_xlabel("resolution (px)")
+    ax.set_ylabel("peak memory (MB)")
+    ax.legend(fontsize="x-small")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
