@@ -1,6 +1,6 @@
 # Project Status
 
-_Last updated: 2026-06-27_
+_Last updated: 2026-06-30_
 
 ## Overview
 
@@ -8,8 +8,8 @@ Three repositories make up this project:
 
 | Repo | Visibility | Purpose | Latest commit |
 |------|-----------|---------|---------------|
-| [`cv-detection-seg-benchmark`](https://github.com/andrudebaran7/cv-detection-seg-benchmark) | public | Streamlit benchmark app (code) | `8f0511d` |
-| [`cv-detection-seg-report`](https://github.com/andrudebaran7/cv-detection-seg-report) | private | LaTeX technical report + PDF | `7455f41` |
+| [`cv-detection-seg-benchmark`](https://github.com/andrudebaran7/cv-detection-seg-benchmark) | public | Streamlit benchmark app + measurement harness | `55b1dbb` |
+| [`cv-detection-seg-report`](https://github.com/andrudebaran7/cv-detection-seg-report) | private | LaTeX technical report (IEEE 2-column) + PDF | `56bd574` |
 | [`detection_servey`](https://github.com/andrudebaran7/detection_servey) | — | survey-template pipeline (separate) | `53f4660` |
 
 All work is committed and pushed. Nothing is pending locally.
@@ -97,6 +97,34 @@ model pages are comfortable; the heavy Comparison/Benchmark works but with littl
   only accepts session-shared files. The Detection model path itself is already proven
   live (same `YoloWrapper.predict` as the Benchmark run). Remaining: a human uploads an
   image on the Detection page to confirm the upload→draw path.
+
+## Phase 2 + companion paper — final state (2026-06-30)
+
+Both repos are complete on `main` and pushed to GitHub.
+
+**Phase 2 — homogeneous performance campaign (`benchmark/` package, separate from `app/`):**
+a portable, device-agnostic measurement harness measuring all six models on CPU (local) and
+GPU (cloud Tesla T4 via Colab) under one protocol. Wrappers gained an optional `device`
+parameter (default `None` preserves prior behaviour). Experiments: warm latency (CPU vs GPU),
+cold-start vs warm-start, throughput, image-size scaling, and peak memory (host RSS on CPU,
+CUDA VRAM on GPU). Results in `data/phase2/results_{cpu,cuda}.csv` (+ hardware manifests);
+GPU speedups range ~4×–45× over CPU. Run it with `python -m benchmark.run --device {cpu,cuda}`;
+the Colab GPU pass is documented in `docs/COLAB_RUNBOOK.md` / `docs/colab_gpu_campaign.ipynb`.
+Two GPU-only device bugs (YOLO-World `set_classes` before `.to(device)`; Mask2Former cuda→numpy)
+were found on Colab and fixed. Suite: 52/52 green.
+
+**Companion paper (`cv-detection-seg-report`):** reoriented from a survey into a
+reproducible-benchmark + engineering study, then converted to **IEEE two-column format**
+(`IEEEtran` conference class with a `twocolumn`-article fallback; build via `make`). It carries
+the real CPU+GPU tables (separate detection/segmentation), the gap and scaling figures
+(generated from the CSVs by `benchmark/build_report_assets.py`), and a TikZ system-architecture
+diagram. Author: Sergio Duarte (Independent Researcher). Builds clean: 12 pages, zero unresolved
+references, zero overfull boxes.
+
+**Optional remaining work (deferred, not blocking):** app screenshots (dropped — Streamlit
+upload iframe friction); averaging the campaign over all 8 bundled images (currently the sweep
+uses one base image); own accuracy/mAP evaluation; ONNX/OpenVINO/quantization; arXiv/workshop
+submission.
 
 ## Possible next steps (not started)
 
