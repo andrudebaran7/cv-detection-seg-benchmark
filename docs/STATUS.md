@@ -16,8 +16,10 @@ All work is committed and pushed. Nothing is pending locally.
 
 ## Current milestone: v0.3 (shipped)
 
-Built with TDD (18/18 unit tests green), unified `DetectionSegModel` interface, mocked
-wrapper tests, and end-to-end smoke tests.
+Built with TDD (46/46 unit tests green on `main`), unified `DetectionSegModel` interface,
+mocked wrapper tests, and end-to-end smoke tests. A Phase 2 measurement harness
+(`benchmark/`) was added on top, giving device-portable CPU/GPU performance measurement
+(latency, memory, throughput, image-size scaling) with results written to `data/phase2/`.
 
 **Models (all behind `models/base.py` → `Prediction`):**
 - YOLO11n — detection (`ultralytics`)
