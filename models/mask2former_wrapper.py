@@ -47,7 +47,10 @@ class Mask2FormerWrapper(DetectionSegModel):
         )[0]
         latency_ms = (time.perf_counter() - start) * 1000.0
 
-        seg = np.array(result["segmentation"])
+        seg_obj = result["segmentation"]
+        if hasattr(seg_obj, "cpu"):  # move a CUDA/torch tensor to host before numpy conversion
+            seg_obj = seg_obj.cpu()
+        seg = np.array(seg_obj)
         labels: list[str] = []
         scores: list[float] = []
         masks: list[Any] = []

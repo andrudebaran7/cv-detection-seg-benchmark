@@ -30,6 +30,11 @@ class YoloWorldWrapper(DetectionSegModel):
             raise ValueError("YOLO-World requires at least one text class.")
 
         model = self._load()
+        # Move the model to the target device BEFORE set_classes so the CLIP text
+        # embeddings are built on the same device as the model (otherwise GPU runs hit
+        # "index is on cpu, different from other tensors on cuda" in index_select).
+        if self.device is not None:
+            model.to(self.device)
         model.set_classes(classes)
 
         start = time.perf_counter()
