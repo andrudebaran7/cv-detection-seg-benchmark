@@ -21,6 +21,12 @@ def _filter(rows, **eq):
     return [r for r in rows if all(r[k] == v for k, v in eq.items())]
 
 
+def _legend(ax, **kw):
+    # Only draw a legend when labeled artists exist, to avoid a UserWarning on empty data.
+    if ax.get_legend_handles_labels()[1]:
+        ax.legend(**kw)
+
+
 def plot_cpu_vs_gpu(rows, out_path):
     sel = _filter(rows, experiment="warm_latency", metric="mean_ms", resolution=640)
     models = sorted({r["model"] for r in sel})
@@ -32,7 +38,7 @@ def plot_cpu_vs_gpu(rows, out_path):
     ax.set_xticks([x + 0.2 for x in range(len(models))])
     ax.set_xticklabels(models, rotation=30, ha="right")
     ax.set_ylabel("warm latency (ms), res 640")
-    ax.legend()
+    _legend(ax)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
@@ -47,7 +53,7 @@ def plot_scaling(rows, out_path):
             ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", label=model)
     ax.set_xlabel("resolution (px)")
     ax.set_ylabel("warm latency (ms)")
-    ax.legend()
+    _legend(ax)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
@@ -65,7 +71,7 @@ def plot_memory_scaling(rows, out_path):
                         marker="o", label=f"{model} ({device})")
     ax.set_xlabel("resolution (px)")
     ax.set_ylabel("peak memory (MB)")
-    ax.legend(fontsize="x-small")
+    _legend(ax, fontsize="x-small")
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
