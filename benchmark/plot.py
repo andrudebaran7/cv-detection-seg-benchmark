@@ -47,13 +47,20 @@ def plot_cpu_vs_gpu(rows, out_path):
 def plot_scaling(rows, out_path):
     sel = _filter(rows, experiment="warm_latency", metric="mean_ms")
     fig, ax = plt.subplots()
-    for model in sorted({r["model"] for r in sel}):
-        pts = sorted((r["resolution"], r["value"]) for r in sel if r["model"] == model)
-        if pts:
-            ax.plot([p[0] for p in pts], [p[1] for p in pts], marker="o", label=model)
+    # Separate per (model, device): mixing CPU and GPU into one line per model produces a
+    # meaningless sawtooth. Log y because CPU and GPU latencies span two orders of magnitude.
+    for device in sorted({r["device"] for r in sel}):
+        for model in sorted({r["model"] for r in sel if r["device"] == device}):
+            pts = sorted((r["resolution"], r["value"]) for r in sel
+                         if r["model"] == model and r["device"] == device)
+            if pts:
+                ax.plot([p[0] for p in pts], [p[1] for p in pts],
+                        marker="o", label=f"{model} ({device})")
     ax.set_xlabel("resolution (px)")
     ax.set_ylabel("warm latency (ms)")
-    _legend(ax)
+    if sel:
+        ax.set_yscale("log")
+    _legend(ax, fontsize="x-small")
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
