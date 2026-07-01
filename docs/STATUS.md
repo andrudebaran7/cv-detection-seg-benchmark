@@ -16,7 +16,7 @@ All work is committed and pushed. Nothing is pending locally.
 
 ## Current milestone: v1.0 (released, DOI 10.5281/zenodo.21092319)
 
-Built with TDD (55/55 unit tests green on `main`), unified `DetectionSegModel` interface,
+Built with TDD (71/71 unit tests green on `main`), unified `DetectionSegModel` interface,
 mocked wrapper tests, and end-to-end smoke tests. A Phase 2 measurement harness
 (`benchmark/`) was added on top, giving device-portable CPU/GPU performance measurement
 (latency, memory, throughput, image-size scaling) with results written to `data/phase2/`.
@@ -113,7 +113,7 @@ CUDA VRAM on GPU). Results in `data/phase2/results_{cpu,cuda}.csv` (+ hardware m
 GPU speedups range ~4×–45× over CPU. Run it with `python -m benchmark.run --device {cpu,cuda}`;
 the Colab GPU pass is documented in `docs/COLAB_RUNBOOK.md` / `docs/colab_gpu_campaign.ipynb`.
 Two GPU-only device bugs (YOLO-World `set_classes` before `.to(device)`; Mask2Former cuda→numpy)
-were found on Colab and fixed. Suite: 55/55 green.
+were found on Colab and fixed. Suite: 71/71 green.
 
 **Companion paper (`cv-detection-seg-report`):** reoriented from a survey into a
 reproducible-benchmark + engineering study, then converted to **IEEE two-column format**
