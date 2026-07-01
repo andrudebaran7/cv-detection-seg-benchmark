@@ -1,7 +1,9 @@
-"""Download a fixed set of COCO val2017 images for the performance campaign.
+"""Download fixed COCO image sets for the measurement campaigns.
 
-Performance scales with pixel count, not labels, so any valid val2017 images work;
-these eight low IDs are stable, well-known entries of the official val2017 split.
+Two independent sets: the resolution-sweep campaign uses eight stable val2017 IDs
+(``IMAGE_IDS`` / ``fetch_all``); the Phase 2c latency-distribution campaign uses the
+``coco128`` subset (``fetch_dist_images``). Performance scales with pixel count, not
+labels, so any valid real images work — reproducibility comes from the pinned IDs / zip.
 """
 from __future__ import annotations
 

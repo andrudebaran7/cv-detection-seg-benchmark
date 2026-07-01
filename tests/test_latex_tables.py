@@ -57,3 +57,11 @@ def test_feasibility_table_marks_fit_and_oom():
     assert "\\label{tab:feasibility}" in tex
     assert "468" in tex and "Yes" in tex        # yolo11n fits
     assert "1600" in tex and "No" in tex        # sam2-tiny OOM
+
+
+def test_feasibility_table_renders_dash_for_missing_rss():
+    # A model with a row but no peak_rss measurement -> RSS unknown -> "--".
+    rows = [{"device": "cpu", "model": "ghost", "task": "detection", "resolution": 640,
+             "experiment": "warm_latency", "metric": "mean_ms", "value": 100.0}]
+    tex = lt.feasibility_table(rows, "tab:feasibility")
+    assert "ghost & -- &" in tex
