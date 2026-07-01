@@ -85,3 +85,29 @@ def plot_memory_scaling(rows, out_path):
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)
     plt.close(fig)
+
+
+def plot_latency_boxplot(rows, out_path):
+    models = sorted({r["model"] for r in rows})
+    devices = [d for d in ("cpu", "cuda") if any(r["device"] == d for r in rows)]
+    fig, ax = plt.subplots()
+    data, positions, labels = [], [], []
+    width = 0.8 / max(len(devices), 1)
+    for i, model in enumerate(models):
+        for j, dev in enumerate(devices):
+            samples = [r["latency_ms"] for r in rows
+                       if r["model"] == model and r["device"] == dev]
+            if samples:
+                data.append(samples)
+                positions.append(i + j * width)
+                labels.append(f"{model}\n{dev}")
+    if data:
+        ax.boxplot(data, positions=positions, widths=width * 0.9)
+        # Log y: CPU and GPU latencies span orders of magnitude.
+        ax.set_yscale("log")
+    ax.set_xticks(positions)
+    ax.set_xticklabels(labels, rotation=30, ha="right", fontsize="x-small")
+    ax.set_ylabel("latency (ms), per image @640")
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)

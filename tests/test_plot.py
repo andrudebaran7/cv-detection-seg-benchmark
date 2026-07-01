@@ -42,3 +42,14 @@ def test_plot_memory_scaling_writes_file(tmp_path):
     out = tmp_path / "mem.png"
     plot.plot_memory_scaling(rows, out)
     assert out.exists() and out.stat().st_size > 0
+
+
+def test_plot_latency_boxplot_writes_file(tmp_path):
+    rows = []
+    for dev, base in (("cpu", 200.0), ("cuda", 9.0)):
+        for i in range(10):
+            rows.append({"device": dev, "model": "yolo11n", "task": "detection",
+                         "latency_ms": base + i, "resolution": 640})
+    out = tmp_path / "box.png"
+    plot.plot_latency_boxplot(rows, out)
+    assert out.exists() and out.stat().st_size > 0
