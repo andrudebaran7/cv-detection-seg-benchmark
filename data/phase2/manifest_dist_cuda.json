@@ -1,0 +1,11 @@
+{
+  "device": "cuda",
+  "cpu": "x86_64",
+  "ram_gb": 12.67,
+  "gpu": "Tesla T4",
+  "torch_version": "2.11.0+cu128",
+  "cuda_available": true,
+  "python": "3.12.13",
+  "os": "Linux-6.6.122+-x86_64-with-glibc2.35",
+  "measured_at": "2026-07-01"
+}
