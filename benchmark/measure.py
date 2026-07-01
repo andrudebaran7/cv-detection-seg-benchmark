@@ -75,3 +75,50 @@ def peak_gpu_mb() -> float:
     if not torch.cuda.is_available():
         return 0.0
     return torch.cuda.max_memory_allocated() / (1024 * 1024)
+
+
+def _percentile(sorted_samples, pct: float) -> float:
+    """Linear-interpolation percentile (numpy default), pct in [0, 100]."""
+    if not sorted_samples:
+        raise ValueError("empty samples")
+    if len(sorted_samples) == 1:
+        return float(sorted_samples[0])
+    rank = (len(sorted_samples) - 1) * (pct / 100.0)
+    lo = int(rank)
+    hi = min(lo + 1, len(sorted_samples) - 1)
+    frac = rank - lo
+    return float(sorted_samples[lo] + (sorted_samples[hi] - sorted_samples[lo]) * frac)
+
+
+def latency_stats(samples_ms) -> dict:
+    """Distribution summary over per-image latency samples (ms)."""
+    ordered = sorted(samples_ms)
+    n = len(ordered)
+    return {
+        "n": n,
+        "mean_ms": statistics.fmean(ordered),
+        "std_ms": statistics.pstdev(ordered) if n > 1 else 0.0,
+        "p50_ms": _percentile(ordered, 50),
+        "p90_ms": _percentile(ordered, 90),
+        "p99_ms": _percentile(ordered, 99),
+    }
+
+
+def time_per_image(predict_one: Callable[[object], object], images, *, warmup: int = 5) -> list:
+    """Time one inference per image (ms) after a global warmup on the first image.
+
+    ``predict_one(img)`` runs one inference. CUDA work is drained per call so wall-clock
+    timing attributes the full GPU cost (mirrors ``timeit_callable``).
+    """
+    sync = _cuda_sync_fn()
+    if images:
+        for _ in range(warmup):
+            predict_one(images[0])
+        sync()
+    samples_ms = []
+    for img in images:
+        start = time.perf_counter()
+        predict_one(img)
+        sync()
+        samples_ms.append((time.perf_counter() - start) * 1000.0)
+    return samples_ms
