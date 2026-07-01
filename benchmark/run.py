@@ -5,13 +5,12 @@ import csv
 import datetime
 import json
 import pathlib
+import subprocess
+import sys
 
 from benchmark.images import RESOLUTIONS, load_images, resize
 from benchmark.manifest import build_manifest
 from benchmark.measure import (
-    peak_gpu_mb,
-    peak_rss_mb,
-    reset_peak_gpu,
     time_first_call_ms,
     timeit_callable,
 )
@@ -30,25 +29,35 @@ def _row(spec, device, resolution, experiment, metric, value, n_iters):
     }
 
 
+def _probe_memory(model_key, device, resolution):
+    """Measure peak memory for one model in a FRESH subprocess (true per-model isolation)."""
+    proc = subprocess.run(
+        [sys.executable, "-m", "benchmark.mem_probe",
+         "--model", model_key, "--device", device, "--resolution", str(resolution)],
+        capture_output=True, text=True, check=True,
+    )
+    return json.loads(proc.stdout.strip().splitlines()[-1])
+
+
 def run_model(spec, image, *, device, resolution, iters, warmup):
     img = resize(image, resolution)
     rows = []
 
-    # B2 cold-start: a fresh model instance, first call only.
+    # B2 cold-start: a fresh model instance, first call only. The model object is already
+    # constructed (weights loaded in the constructor for ultralytics/transformers); this
+    # times the first inference (lazy graph build + any on-demand downloads).
     cold_model = spec.factory(device)
     cold_ms = time_first_call_ms(
         lambda: cold_model.predict(img, **spec.predict_kwargs(img))
     )
     rows.append(_row(spec, device, resolution, "cold_start", "first_call_ms", cold_ms, 1))
-    del cold_model  # free the cold instance so the memory reading isolates the warm model
+    del cold_model
 
-    # Warm model reused for B1/B3/B5.
+    # Warm model reused for B1/B3.
     model = spec.factory(device)
     kwargs = spec.predict_kwargs(img)
     call = lambda: model.predict(img, **kwargs)
 
-    # B5 memory: reset CUDA peak tracking so the warm run's peak is isolated (no-op on CPU).
-    reset_peak_gpu()
     stats = timeit_callable(call, warmup=warmup, iters=iters)
     rows.append(_row(spec, device, resolution, "warm_latency", "mean_ms", stats["mean_ms"], iters))
     rows.append(_row(spec, device, resolution, "warm_latency", "median_ms", stats["median_ms"], iters))
@@ -57,11 +66,12 @@ def run_model(spec, image, *, device, resolution, iters, warmup):
     throughput = 1000.0 / stats["mean_ms"] if stats["mean_ms"] > 0 else 0.0
     rows.append(_row(spec, device, resolution, "throughput", "imgs_per_sec", throughput, iters))
 
-    # Device-appropriate memory: host RSS on CPU, peak CUDA VRAM on GPU (spec B5).
+    # B5 memory: measured in an isolated subprocess (peak RSS on CPU, peak CUDA VRAM on GPU).
+    mem = _probe_memory(spec.key, device, resolution)
     if device == "cuda":
-        rows.append(_row(spec, device, resolution, "peak_gpu", "gpu_mem_mb", peak_gpu_mb(), 1))
+        rows.append(_row(spec, device, resolution, "peak_gpu", "gpu_mem_mb", mem["gpu_mb"], 1))
     else:
-        rows.append(_row(spec, device, resolution, "peak_rss", "rss_mb", peak_rss_mb(), 1))
+        rows.append(_row(spec, device, resolution, "peak_rss", "rss_mb", mem["rss_mb"], 1))
     return rows
 
 

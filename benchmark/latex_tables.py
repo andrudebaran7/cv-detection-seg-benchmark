@@ -35,8 +35,9 @@ def latency_table(rows, task, label) -> str:
 def coldwarm_table(rows, task, label) -> str:
     lines = [
         r"\begin{table*}[ht]", r"\centering",
-        rf"\caption{{Cold-start (first call, incl.\ load) vs.\ warm median latency at {_RES}px "
-        rf"for {task} models (this work, CPU).}}",
+        rf"\caption{{First-inference cold start (lazy graph build and on-demand downloads; the "
+        rf"model object is already constructed) vs.\ warm median latency at {_RES}px for "
+        rf"{task} models (this work, CPU).}}",
         rf"\label{{{label}}}", r"\small",
         r"\begin{tabularx}{\linewidth}{@{}Xrr@{}}", r"\toprule",
         r"Model & Cold-start (ms) & Warm median (ms) \\", r"\midrule",

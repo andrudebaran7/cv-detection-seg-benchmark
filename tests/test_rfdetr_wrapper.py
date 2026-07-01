@@ -11,7 +11,7 @@ def _fake_detections():
     det = MagicMock()
     det.xyxy = np.array([[5.0, 6.0, 7.0, 8.0]])
     det.confidence = np.array([0.77])
-    det.class_id = np.array([0])  # COCO id 0 -> "person"
+    det.class_id = np.array([1])  # COCO 91-scheme paper id 1 -> "person"
     return det
 
 
@@ -44,3 +44,17 @@ def test_rfdetr_lazy_import():
     import importlib
     import models.rfdetr_wrapper as rw
     importlib.reload(rw)  # importing must not require rfdetr
+
+
+def test_rfdetr_maps_coco91_ids_to_names():
+    # Regression guard for the COCO 91-scheme mapping: class_id 1,6 -> person, bus
+    # (the old 0-indexed lookup mislabelled these as bicycle, train).
+    det = MagicMock()
+    det.xyxy = np.array([[0.0, 0.0, 1.0, 1.0], [0.0, 0.0, 1.0, 1.0]])
+    det.confidence = np.array([0.9, 0.8])
+    det.class_id = np.array([1, 6])
+    _install_fake_rfdetr(det)
+    from models.rfdetr_wrapper import RfDetrWrapper
+
+    pred = RfDetrWrapper().predict(np.zeros((32, 32, 3), dtype=np.uint8))
+    assert pred.labels == ["person", "bus"]

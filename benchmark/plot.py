@@ -38,6 +38,9 @@ def plot_cpu_vs_gpu(rows, out_path):
     ax.set_xticks([x + 0.2 for x in range(len(models))])
     ax.set_xticklabels(models, rotation=30, ha="right")
     ax.set_ylabel("warm latency (ms), res 640")
+    # Log scale so the small GPU bars stay visible next to the much larger CPU bars.
+    if sel:
+        ax.set_yscale("log")
     _legend(ax)
     fig.tight_layout()
     fig.savefig(out_path, dpi=150)

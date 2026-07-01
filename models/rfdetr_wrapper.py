@@ -5,7 +5,7 @@ from typing import Any
 
 from models.base import Box, DetectionSegModel, Prediction
 
-# 80 COCO class names, index-aligned with RF-DETR class_id.
+# The 80 COCO "things" class names, in category order.
 COCO_CLASSES = [
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck",
     "boat", "traffic light", "fire hydrant", "stop sign", "parking meter", "bench",
@@ -20,6 +20,17 @@ COCO_CLASSES = [
     "refrigerator", "book", "clock", "vase", "scissors", "teddy bear",
     "hair drier", "toothbrush",
 ]
+
+# RF-DETR emits COCO 91-class *paper category ids* (1..90 with gaps), NOT a contiguous
+# 0..79 index. Verified empirically: on bus.jpg it returns class_id [1, 6] for
+# person + bus (91-scheme), which the old 0-indexed lookup mislabelled as bicycle + train.
+_COCO91_IDS = [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+    24, 25, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 46, 47,
+    48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 67, 70,
+    72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 85, 86, 87, 88, 89, 90,
+]
+COCO_ID_TO_NAME = dict(zip(_COCO91_IDS, COCO_CLASSES))
 
 
 class RfDetrWrapper(DetectionSegModel):
@@ -45,8 +56,7 @@ class RfDetrWrapper(DetectionSegModel):
         boxes = [Box(float(x1), float(y1), float(x2), float(y2))
                  for x1, y1, x2, y2 in det.xyxy]
         scores = [float(c) for c in det.confidence]
-        labels = [COCO_CLASSES[int(i)] if 0 <= int(i) < len(COCO_CLASSES) else str(int(i))
-                  for i in det.class_id]
+        labels = [COCO_ID_TO_NAME.get(int(i), str(int(i))) for i in det.class_id]
 
         return Prediction(
             boxes=boxes,
