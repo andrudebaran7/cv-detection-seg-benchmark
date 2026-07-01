@@ -5,10 +5,10 @@ import pathlib
 
 from benchmark import latex_tables as lt
 from benchmark import plot
-from benchmark.combine import load_combined
+from benchmark.combine import load_combined, load_dist
 
 
-def build(cpu_csv, cuda_csv, fig_dir, tex_dir):
+def build(cpu_csv, cuda_csv, fig_dir, tex_dir, dist_cpu=None, dist_cuda=None):
     fig_dir = pathlib.Path(fig_dir)
     tex_dir = pathlib.Path(tex_dir)
     fig_dir.mkdir(parents=True, exist_ok=True)
@@ -25,16 +25,27 @@ def build(cpu_csv, cuda_csv, fig_dir, tex_dir):
     (tex_dir / "coldwarm_det_table.tex").write_text(lt.coldwarm_table(rows, "detection", "tab:coldwarm-det"))
     (tex_dir / "coldwarm_seg_table.tex").write_text(lt.coldwarm_table(rows, "segmentation", "tab:coldwarm-seg"))
     (tex_dir / "memory_table.tex").write_text(lt.memory_table(rows, "tab:perf-mem"))
+    (tex_dir / "feasibility_table.tex").write_text(lt.feasibility_table(rows, "tab:feasibility"))
+
+    dist_paths = [p for p in (dist_cpu, dist_cuda) if p and pathlib.Path(p).exists()]
+    if dist_paths:
+        drows = load_dist(*dist_paths)
+        (tex_dir / "distribution_table.tex").write_text(
+            lt.distribution_table(drows, "tab:latency-dist"))
+        plot.plot_latency_boxplot(drows, fig_dir / "latency_boxplot.pdf")
 
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description="Build report figures + table fragments from CSVs")
     ap.add_argument("--cpu", default="data/phase2/results_cpu.csv")
     ap.add_argument("--cuda", default="data/phase2/results_cuda.csv")
+    ap.add_argument("--dist-cpu", default="data/phase2/results_dist_cpu.csv")
+    ap.add_argument("--dist-cuda", default="data/phase2/results_dist_cuda.csv")
     ap.add_argument("--fig-dir", required=True)
     ap.add_argument("--tex-dir", required=True)
     args = ap.parse_args(argv)
-    build(args.cpu, args.cuda, args.fig_dir, args.tex_dir)
+    build(args.cpu, args.cuda, args.fig_dir, args.tex_dir,
+          dist_cpu=args.dist_cpu, dist_cuda=args.dist_cuda)
 
 
 if __name__ == "__main__":
