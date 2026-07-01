@@ -2,7 +2,8 @@
 
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-green)
-![Milestone](https://img.shields.io/badge/milestone-v0.3-orange)
+![Release](https://img.shields.io/badge/release-v1.0-orange)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21092319.svg)](https://doi.org/10.5281/zenodo.21092319)
 
 Interactive comparison of object **detection** and image **segmentation** models
 through a single unified interface, with a Streamlit demo. Built to fit
@@ -101,6 +102,22 @@ app/components/       # model_runner (caching), visualization, comparison, bench
 
 A technical report on the state of the art in detection & segmentation accompanies
 this repository (private): `cv-detection-seg-report`.
+
+## Citation
+
+The `v1.0` release is archived on Zenodo: **[10.5281/zenodo.21092319](https://doi.org/10.5281/zenodo.21092319)**.
+
+```bibtex
+@software{duarte2026cvbenchmark,
+  author  = {Duarte, Sergio},
+  title   = {{cv-detection-seg-benchmark}: A Reproducible CPU/GPU Detection and
+             Segmentation Benchmark},
+  year    = {2026},
+  version = {v1.0},
+  doi     = {10.5281/zenodo.21092319},
+  url     = {https://doi.org/10.5281/zenodo.21092319}
+}
+```
 
 ## License
 
