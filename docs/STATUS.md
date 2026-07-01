@@ -1,6 +1,6 @@
 # Project Status
 
-_Last updated: 2026-07-01_
+_Last updated: 2026-07-02_
 
 ## Overview
 
@@ -8,8 +8,8 @@ Three repositories make up this project:
 
 | Repo | Visibility | Purpose | Latest commit |
 |------|-----------|---------|---------------|
-| [`cv-detection-seg-benchmark`](https://github.com/andrudebaran7/cv-detection-seg-benchmark) | public | Streamlit benchmark app + measurement harness | `55b1dbb` |
-| [`cv-detection-seg-report`](https://github.com/andrudebaran7/cv-detection-seg-report) | private | LaTeX technical report (IEEE 2-column) + PDF | `56bd574` |
+| [`cv-detection-seg-benchmark`](https://github.com/andrudebaran7/cv-detection-seg-benchmark) | public | Streamlit benchmark app + measurement harness | `7410707` |
+| [`cv-detection-seg-report`](https://github.com/andrudebaran7/cv-detection-seg-report) | private | LaTeX technical report (IEEE 2-column) + PDF | `e36d606` |
 | [`detection_servey`](https://github.com/andrudebaran7/detection_servey) | — | survey-template pipeline (separate) | `53f4660` |
 
 All work is committed and pushed. Nothing is pending locally.
@@ -147,6 +147,36 @@ re-verified:
 - **GPU memory refreshed (2026-07-01):** the Colab campaign was re-run with the corrected
   two-phase harness, so `data/phase2/results_cuda.csv` now carries isolated per-model VRAM
   (`measured_at 2026-07-01`); the report's memory table/figure were regenerated to match.
+
+## Phase 2c — latency distribution + 1 GB feasibility (2026-07-02)
+
+Directly answers the IEEE/CVPR review's main technical weakness (`Revision_IEEE/`): latency
+was measured on essentially a single image with no statistical analysis. Both repos are on
+`main` and pushed.
+
+**Benchmark harness (`benchmark/run_dist.py`, new):** a latency-distribution campaign that
+loads each model once, then times a **single warm inference per image over 100 fixed COCO
+images** (the `coco128` subset, one pinned 7 MB zip fetched by `fetch_images.fetch_dist_images`)
+at 640 px --- a distribution over image **content**, separate from the per-resolution sweep.
+New primitives: `measure.latency_stats` (mean/std + P50/P90/P99 via linear-interpolation
+percentile) and `measure.time_per_image`; `combine.load_dist`; generators
+`latex_tables.{distribution_table,feasibility_table}` and `plot.plot_latency_boxplot`, all wired
+into `build_report_assets`. Results in `data/phase2/results_dist_{cpu,cuda}.csv` (600 rows each:
+6 models × 100 images) with hardware manifests. GPU pass ran on the Colab Tesla T4
+(`docs/colab_gpu_campaign.ipynb` now runs both `benchmark.run` and `benchmark.run_dist`). Built
+TDD; suite **71/71 green**. Independent per-task reviews + a final whole-branch review
+(Ready-to-merge, no Critical/Important findings).
+
+**1 GB deployment feasibility:** derived from the isolated per-model peak RSS at 640 px
+(`fits < 1024 MB`): `yolo11n` (453 MB), `yolo11n-seg` (486 MB), `rfdetr-nano` (919 MB) fit the
+free tier; `sam2-tiny` (1109 MB), `yolo-world` (1800 MB), `mask2former` (1880 MB) exceed it.
+
+**Companion paper (`cv-detection-seg-report`):** new Results subsection *"Latency distribution
+across images"* (Table `tab:latency-dist` with mean/std/P50/P90/P99 for all six models on CPU
+and GPU + box-plot `fig:latency-dist`), a *"Deployment feasibility on the ~1 GB tier"* table
+(`tab:feasibility`), and the *"single base image"* threat-to-validity retired; abstract, method,
+and intro updated to describe the distribution. PDF grew 8 → **9 pages**; build clean (0
+undefined refs, 0 overfull boxes).
 
 ## Possible next steps (not started)
 
