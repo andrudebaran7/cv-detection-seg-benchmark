@@ -1,6 +1,6 @@
 # Project Status
 
-_Last updated: 2026-06-30_
+_Last updated: 2026-07-01_
 
 ## Overview
 
@@ -14,7 +14,7 @@ Three repositories make up this project:
 
 All work is committed and pushed. Nothing is pending locally.
 
-## Current milestone: v0.3 (shipped)
+## Current milestone: v1.0 (released, DOI 10.5281/zenodo.21092319)
 
 Built with TDD (55/55 unit tests green on `main`), unified `DetectionSegModel` interface,
 mocked wrapper tests, and end-to-end smoke tests. A Phase 2 measurement harness
@@ -31,8 +31,10 @@ mocked wrapper tests, and end-to-end smoke tests. A Phase 2 measurement harness
 
 **Pages:** Detection, Segmentation, Open-Vocabulary, Comparison, Benchmark.
 
-**Measured benchmark (CPU, `data/benchmark_results.csv`):**
+**App benchmark page (CPU, single image, `data/benchmark_results.csv`):**
 YOLO11n 39.5 mAP / ~211 ms · RF-DETR-nano 48.4 / ~421 ms · YOLO-World 35.4 (LVIS) / ~377 ms.
+_(This is the in-app single-image benchmark; the homogeneous CPU+GPU campaign that feeds the
+paper lives in `data/phase2/` — see the Phase 2 section below.)_
 
 ## Deployment — Streamlit Community Cloud
 

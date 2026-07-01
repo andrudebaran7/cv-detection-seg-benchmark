@@ -95,9 +95,11 @@ app/components/       # model_runner (caching), visualization, comparison, bench
 
 - **v0.1** — base structure, YOLO + SAM 2, minimal Streamlit app. ✅
 - **v0.2** — RF-DETR (detection), YOLO-World; side-by-side comparison page. ✅
-- **v0.3** (this release) — Mask2Former (panoptic); benchmark page (latency vs mAP). ✅
-- **v0.4** — RF-DETR-Seg (once masks return reliably); video input; real-time metrics.
-- **v1.0** — full docs, demo GIF, Zenodo release.
+- **v0.3** — Mask2Former (panoptic); benchmark page (latency vs mAP). ✅
+- **v1.0** (this release) — portable CPU/GPU measurement harness (`benchmark/`), real
+  Tesla T4 campaign, independently-audited corrections, 55 tests, and a Zenodo DOI. ✅
+- **v0.4+** (future) — RF-DETR-Seg (once masks return reliably); video input; real-time
+  metrics; own accuracy/mAP evaluation; arXiv preprint.
 
 ## Companion report
 
