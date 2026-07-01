@@ -60,6 +60,10 @@ Tests mock the underlying models (no weight downloads), so the suite is fast:
 .venv/bin/python -m pytest -v
 ```
 
+The documented test count is kept in sync with the suite automatically:
+`python tools/update_test_count.py` rewrites it in the docs from a `pytest`
+collection, and CI runs the same script with `--check` to block drift.
+
 ## Deploy to Streamlit Community Cloud
 
 Streamlit Community Cloud reads `requirements.txt` (Python deps) and `packages.txt`

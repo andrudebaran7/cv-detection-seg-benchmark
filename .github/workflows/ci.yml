@@ -38,3 +38,8 @@ jobs:
 
       - name: Run test suite
         run: python -m pytest -v
+
+      - name: Check documented test count is in sync
+        # Fails if docs/STATUS.md or README.md name a stale count; run
+        # `python tools/update_test_count.py` locally to resync.
+        run: python tools/update_test_count.py --check
