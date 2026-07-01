@@ -25,3 +25,14 @@ def value_for(rows, *, device, model, experiment, metric, resolution):
 
 def models_for_task(rows, task) -> list[str]:
     return sorted({r["model"] for r in rows if r["task"] == task})
+
+
+def load_dist(*paths) -> list[dict]:
+    rows = []
+    for path in paths:
+        with open(path) as f:
+            for r in csv.DictReader(f):
+                r["latency_ms"] = float(r["latency_ms"])
+                r["resolution"] = int(r["resolution"])
+                rows.append(r)
+    return rows

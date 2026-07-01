@@ -34,3 +34,24 @@ def test_value_for_and_models_for_task(tmp_path):
     assert combine.value_for(rows, device="cuda", model="yolo11n",
                              experiment="warm_latency", metric="mean_ms", resolution=640) is None
     assert combine.models_for_task(rows, "detection") == ["yolo11n"]
+
+
+_DIST_COLS = ["device", "model", "task", "image_id", "latency_ms", "resolution", "measured_at"]
+
+
+def _write_dist(path, rows):
+    with open(path, "w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(_DIST_COLS)
+        w.writerows(rows)
+
+
+def test_load_dist_coerces_latency_and_resolution(tmp_path):
+    _write_dist(tmp_path / "d.csv", [
+        ["cpu", "yolo11n", "detection", "000000000009", 201.5, 640, "2026-07-01"],
+        ["cpu", "yolo11n", "detection", "000000000025", 198.0, 640, "2026-07-01"]])
+    rows = combine.load_dist(tmp_path / "d.csv")
+    assert len(rows) == 2
+    assert rows[0]["latency_ms"] == 201.5 and isinstance(rows[0]["latency_ms"], float)
+    assert rows[0]["resolution"] == 640 and isinstance(rows[0]["resolution"], int)
+    assert rows[0]["image_id"] == "000000000009"
