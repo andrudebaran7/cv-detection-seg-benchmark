@@ -16,7 +16,7 @@ All work is committed and pushed. Nothing is pending locally.
 
 ## Current milestone: v0.3 (shipped)
 
-Built with TDD (52/52 unit tests green on `main`), unified `DetectionSegModel` interface,
+Built with TDD (55/55 unit tests green on `main`), unified `DetectionSegModel` interface,
 mocked wrapper tests, and end-to-end smoke tests. A Phase 2 measurement harness
 (`benchmark/`) was added on top, giving device-portable CPU/GPU performance measurement
 (latency, memory, throughput, image-size scaling) with results written to `data/phase2/`.
@@ -118,13 +118,33 @@ reproducible-benchmark + engineering study, then converted to **IEEE two-column 
 (`IEEEtran` conference class with a `twocolumn`-article fallback; build via `make`). It carries
 the real CPU+GPU tables (separate detection/segmentation), the gap and scaling figures
 (generated from the CSVs by `benchmark/build_report_assets.py`), and a TikZ system-architecture
-diagram. Author: Sergio Duarte (Independent Researcher). Builds clean: 12 pages, zero unresolved
+diagram. Author: Sergio Duarte (Independent Researcher). Builds clean: 7 pages, zero unresolved
 references, zero overfull boxes.
 
 **Optional remaining work (deferred, not blocking):** app screenshots (dropped — Streamlit
 upload iframe friction); averaging the campaign over all 8 bundled images (currently the sweep
 uses one base image); own accuracy/mAP evaluation; ONNX/OpenVINO/quantization; arXiv/workshop
 submission.
+
+## Audit + corrections (2026-07-01)
+
+An independent audit (`audicion_revision/` in both repos) cross-checked the paper's numbers
+against the CSVs and the harness. It found real defects, all since fixed and independently
+re-verified:
+- **RF-DETR label bug (real):** the wrapper indexed a 0..79 list but RF-DETR emits COCO
+  91-scheme category ids (1..90) --- it mislabelled person/bus as bicycle/train. Fixed with a
+  proper id map (`models/rfdetr_wrapper.py`) + regression test.
+- **Memory measurement:** now measured per model in an isolated subprocess with a true peak
+  (`benchmark/mem_probe.py`), and the campaign measures **all memory first** (two-phase
+  `run.main`) so a heavy parent process cannot inflate the child's `ru_maxrss`. Earlier
+  in-process readings double-counted retained pages.
+- **Paper rigor:** dropped a duplicate/contradictory latency table; declared the ~15 GB
+  measurement host (distinct from the ~1 GB Streamlit tier); cited every published claim in
+  the detection table; noted CPU/GPU memory are not the same quantity; precise speedup range
+  (CPU is ~3--34x slower than our own T4).
+
+**Still open:** the GPU memory column was measured with the *old* method; re-run the Colab
+campaign (`docs/colab_gpu_campaign.ipynb`) with the corrected harness to refresh it.
 
 ## Possible next steps (not started)
 
