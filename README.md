@@ -1,5 +1,6 @@
 # cv-detection-seg-benchmark
 
+[![CI](https://github.com/andrudebaran7/cv-detection-seg-benchmark/actions/workflows/ci.yml/badge.svg)](https://github.com/andrudebaran7/cv-detection-seg-benchmark/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License](https://img.shields.io/badge/license-AGPL--3.0-green)
 ![Release](https://img.shields.io/badge/release-v1.0-orange)

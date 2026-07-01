@@ -111,14 +111,14 @@ CUDA VRAM on GPU). Results in `data/phase2/results_{cpu,cuda}.csv` (+ hardware m
 GPU speedups range ~4×–45× over CPU. Run it with `python -m benchmark.run --device {cpu,cuda}`;
 the Colab GPU pass is documented in `docs/COLAB_RUNBOOK.md` / `docs/colab_gpu_campaign.ipynb`.
 Two GPU-only device bugs (YOLO-World `set_classes` before `.to(device)`; Mask2Former cuda→numpy)
-were found on Colab and fixed. Suite: 52/52 green.
+were found on Colab and fixed. Suite: 55/55 green.
 
 **Companion paper (`cv-detection-seg-report`):** reoriented from a survey into a
 reproducible-benchmark + engineering study, then converted to **IEEE two-column format**
 (`IEEEtran` conference class with a `twocolumn`-article fallback; build via `make`). It carries
 the real CPU+GPU tables (separate detection/segmentation), the gap and scaling figures
 (generated from the CSVs by `benchmark/build_report_assets.py`), and a TikZ system-architecture
-diagram. Author: Sergio Duarte (Independent Researcher). Builds clean: 7 pages, zero unresolved
+diagram. Author: Sergio Duarte (Independent Researcher). Builds clean: 8 pages, zero unresolved
 references, zero overfull boxes.
 
 **Optional remaining work (deferred, not blocking):** app screenshots (dropped — Streamlit
@@ -141,10 +141,10 @@ re-verified:
 - **Paper rigor:** dropped a duplicate/contradictory latency table; declared the ~15 GB
   measurement host (distinct from the ~1 GB Streamlit tier); cited every published claim in
   the detection table; noted CPU/GPU memory are not the same quantity; precise speedup range
-  (CPU is ~3--34x slower than our own T4).
-
-**Still open:** the GPU memory column was measured with the *old* method; re-run the Colab
-campaign (`docs/colab_gpu_campaign.ipynb`) with the corrected harness to refresh it.
+  (CPU is ~3--33x slower than our own T4).
+- **GPU memory refreshed (2026-07-01):** the Colab campaign was re-run with the corrected
+  two-phase harness, so `data/phase2/results_cuda.csv` now carries isolated per-model VRAM
+  (`measured_at 2026-07-01`); the report's memory table/figure were regenerated to match.
 
 ## Possible next steps (not started)
 
