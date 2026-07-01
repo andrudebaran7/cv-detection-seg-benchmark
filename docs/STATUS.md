@@ -8,8 +8,8 @@ Three repositories make up this project:
 
 | Repo | Visibility | Purpose | Latest commit |
 |------|-----------|---------|---------------|
-| [`cv-detection-seg-benchmark`](https://github.com/andrudebaran7/cv-detection-seg-benchmark) | public | Streamlit benchmark app + measurement harness | `7410707` |
-| [`cv-detection-seg-report`](https://github.com/andrudebaran7/cv-detection-seg-report) | private | LaTeX technical report (IEEE 2-column) + PDF | `e36d606` |
+| [`cv-detection-seg-benchmark`](https://github.com/andrudebaran7/cv-detection-seg-benchmark) | public | Streamlit benchmark app + measurement harness | `d229767` |
+| [`cv-detection-seg-report`](https://github.com/andrudebaran7/cv-detection-seg-report) | private | LaTeX technical report (IEEE 2-column) + PDF | `7419dfa` |
 | [`detection_servey`](https://github.com/andrudebaran7/detection_servey) | — | survey-template pipeline (separate) | `53f4660` |
 
 All work is committed and pushed. Nothing is pending locally.
@@ -176,7 +176,8 @@ across images"* (Table `tab:latency-dist` with mean/std/P50/P90/P99 for all six 
 and GPU + box-plot `fig:latency-dist`), a *"Deployment feasibility on the ~1 GB tier"* table
 (`tab:feasibility`), and the *"single base image"* threat-to-validity retired; abstract, method,
 and intro updated to describe the distribution. PDF grew 8 → **9 pages**; build clean (0
-undefined refs, 0 overfull boxes).
+undefined refs, 0 overfull boxes). The box-plot (Fig.~5) was later sized to `0.6\linewidth`
+for a more compact layout.
 
 ## Possible next steps (not started)
 
