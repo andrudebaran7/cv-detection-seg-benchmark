@@ -21,6 +21,10 @@ from benchmark.images import load_images, resize
 from benchmark.measure import peak_gpu_mb, reset_peak_gpu
 from benchmark.models_registry import REGISTRY
 
+# Unique sentinel prefixing the JSON result line, so the caller can locate it unambiguously
+# even amid a model library's verbose stdout logging.
+RESULT_MARKER = "__MEM_PROBE_RESULT__"
+
 
 def measure_peak_memory(model_key, device, resolution, *, iters=5, warmup=2) -> dict:
     spec = REGISTRY[model_key]
@@ -45,7 +49,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     out = measure_peak_memory(args.model, args.device, args.resolution,
                               iters=args.iters, warmup=args.warmup)
-    print(json.dumps(out))
+    print(RESULT_MARKER + " " + json.dumps(out))
 
 
 if __name__ == "__main__":

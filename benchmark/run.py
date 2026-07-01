@@ -31,12 +31,19 @@ def _row(spec, device, resolution, experiment, metric, value, n_iters):
 
 def _probe_memory(model_key, device, resolution):
     """Measure peak memory for one model in a FRESH subprocess (true per-model isolation)."""
+    from benchmark.mem_probe import RESULT_MARKER
+
     proc = subprocess.run(
         [sys.executable, "-m", "benchmark.mem_probe",
          "--model", model_key, "--device", device, "--resolution", str(resolution)],
         capture_output=True, text=True, check=True,
     )
-    return json.loads(proc.stdout.strip().splitlines()[-1])
+    # Find the sentinel-marked result line; do NOT trust "the last line" (verbose model
+    # libraries print around it, which previously mis-parsed rfdetr/mask2former).
+    for line in reversed(proc.stdout.splitlines()):
+        if line.startswith(RESULT_MARKER):
+            return json.loads(line[len(RESULT_MARKER):])
+    raise RuntimeError(f"mem_probe produced no result line for {model_key} @ {resolution}")
 
 
 def run_model(spec, image, *, device, resolution, iters, warmup):
