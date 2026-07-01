@@ -18,7 +18,7 @@ the paper. It does **not** touch the algorithmic side; accuracy stays published.
 
 | Decision | Choice |
 |----------|--------|
-| Sampling | **100 fixed COCO val2017 images**, one timed inference per image after a global warmup → the latency distribution is over image **content** (100 samples per model×device) |
+| Sampling | **~100 fixed real COCO images** (the `coco128` subset — one pinned zip), one timed inference per image after a global warmup → the latency distribution is over image **content** (~100 samples per model×device). _Deviation from the original "100 val2017 ids": coco128 is one pinned, permanent zip and far more reproducible than a fragile 100-id list; since no accuracy is measured — only latency over varied content — the specific split is immaterial._ |
 | Devices | **CPU (desktop) + GPU (cloud T4)**; the GPU pass is a Colab handoff |
 | Resolution | Fixed at **640px** for the distribution; the existing resolution sweep (single base image) is unchanged |
 | Statistics | mean, std, **P50/P90/P99** |
@@ -27,16 +27,18 @@ the paper. It does **not** touch the algorithmic side; accuracy stays published.
 
 ## Repos touched
 
-- **`cv-detection-seg-benchmark`** (code): 100-image fetch, a percentile primitive, a distribution
-  campaign mode, its CSVs, and the generators (distribution table, box-plot, 1 GB table).
+- **`cv-detection-seg-benchmark`** (code): ~100-image fetch (coco128), a percentile primitive, a
+  distribution campaign mode, its CSVs, and the generators (distribution table, box-plot, 1 GB table).
 - **`cv-detection-seg-report`** (docs): a new Results subsection + the box-plot figure + the two
   new tables; threats/abstract/method updates.
 
 ## Part A — Measurement (benchmark repo)
 
-**1. 100-image set.** Extend `benchmark/fetch_images.py` `IMAGE_IDS` to **100 fixed COCO
-val2017 ids** (reproducible via the pinned list). The `.jpg` files are fetched on demand and
-git-ignored (repo stays small; reproducibility comes from the pinned ids + `SOURCES.md`).
+**1. ~100-image set.** Add a `fetch_dist_images(limit=100)` to `benchmark/fetch_images.py` that
+downloads the pinned **`coco128`** zip (`https://ultralytics.com/assets/coco128.zip`, 128 real COCO
+images) and extracts the jpgs into `data/dist_images/`. The `.jpg` files are fetched on demand and
+git-ignored (repo stays small; reproducibility comes from the pinned zip URL). The existing 8-image
+val2017 set (`IMAGE_IDS`) is untouched.
 
 **2. Percentile primitive.** Add to `benchmark/measure.py` a function
 `latency_stats(samples_ms) -> {n, mean_ms, std_ms, p50_ms, p90_ms, p99_ms}` using
