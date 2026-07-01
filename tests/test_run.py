@@ -28,30 +28,30 @@ def _fake_spec():
     return ModelSpec("fake", "detection", lambda device: _FakeModel(device), lambda img: {})
 
 
-def test_run_model_emits_rows_for_each_experiment():
+def test_run_model_emits_latency_experiments_only():
+    # Memory is now measured separately (memory_rows), before any in-process model load.
     img = Image.new("RGB", (640, 480))
     rows = run.run_model(_fake_spec(), img, device="cpu", resolution=640, iters=3, warmup=1)
     experiments = {r["experiment"] for r in rows}
-    assert {"warm_latency", "cold_start", "throughput", "peak_rss"} <= experiments
+    assert experiments == {"warm_latency", "cold_start", "throughput"}
     for r in rows:
-        assert r["device"] == "cpu"
-        assert r["model"] == "fake"
-        assert r["resolution"] == 640
+        assert r["device"] == "cpu" and r["model"] == "fake" and r["resolution"] == 640
         assert isinstance(r["value"], float)
 
 
-def test_run_model_uses_gpu_memory_on_cuda(monkeypatch):
-    # On cuda the memory row must come from the probe's CUDA VRAM (peak_gpu/gpu_mem_mb),
-    # not host RSS.
+def test_memory_rows_cpu_uses_peak_rss():
+    rows = run.memory_rows(_fake_spec(), device="cpu", resolutions=[320, 640])
+    assert [r["experiment"] for r in rows] == ["peak_rss", "peak_rss"]
+    assert rows[0]["metric"] == "rss_mb" and rows[0]["value"] == 7.0  # from the autouse stub
+
+
+def test_memory_rows_uses_gpu_on_cuda(monkeypatch):
     monkeypatch.setattr(run, "_probe_memory",
                         lambda model_key, device, resolution: {"rss_mb": 0.0, "gpu_mb": 123.0})
-    img = Image.new("RGB", (640, 480))
-    rows = run.run_model(_fake_spec(), img, device="cuda", resolution=640, iters=2, warmup=1)
-    mem_rows = [r for r in rows if r["experiment"] in ("peak_gpu", "peak_rss")]
-    assert len(mem_rows) == 1
-    assert mem_rows[0]["experiment"] == "peak_gpu"
-    assert mem_rows[0]["metric"] == "gpu_mem_mb"
-    assert mem_rows[0]["value"] == 123.0
+    rows = run.memory_rows(_fake_spec(), device="cuda", resolutions=[640])
+    assert len(rows) == 1
+    assert rows[0]["experiment"] == "peak_gpu" and rows[0]["metric"] == "gpu_mem_mb"
+    assert rows[0]["value"] == 123.0
 
 
 def test_write_csv_has_fixed_header(tmp_path):

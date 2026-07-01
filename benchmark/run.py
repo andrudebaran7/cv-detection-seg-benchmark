@@ -72,13 +72,23 @@ def run_model(spec, image, *, device, resolution, iters, warmup):
 
     throughput = 1000.0 / stats["mean_ms"] if stats["mean_ms"] > 0 else 0.0
     rows.append(_row(spec, device, resolution, "throughput", "imgs_per_sec", throughput, iters))
+    return rows
 
-    # B5 memory: measured in an isolated subprocess (peak RSS on CPU, peak CUDA VRAM on GPU).
-    mem = _probe_memory(spec.key, device, resolution)
-    if device == "cuda":
-        rows.append(_row(spec, device, resolution, "peak_gpu", "gpu_mem_mb", mem["gpu_mb"], 1))
-    else:
-        rows.append(_row(spec, device, resolution, "peak_rss", "rss_mb", mem["rss_mb"], 1))
+
+def memory_rows(spec, *, device, resolutions):
+    """Memory rows for one model across resolutions, via the isolated subprocess probe.
+
+    Call this BEFORE any model is loaded in-process: the probe forks from the current
+    process, and ``ru_maxrss`` in the child inherits the parent's fork-time RSS, so a heavy
+    parent (one that already loaded models for latency timing) would inflate the reading.
+    """
+    rows = []
+    for resolution in resolutions:
+        mem = _probe_memory(spec.key, device, resolution)
+        if device == "cuda":
+            rows.append(_row(spec, device, resolution, "peak_gpu", "gpu_mem_mb", mem["gpu_mb"], 1))
+        else:
+            rows.append(_row(spec, device, resolution, "peak_rss", "rss_mb", mem["rss_mb"], 1))
     return rows
 
 
@@ -103,22 +113,40 @@ def main(argv=None):
     out.mkdir(parents=True, exist_ok=True)
 
     keys = list(REGISTRY) if args.models == "all" else args.models.split(",")
-    imgs = load_images()
-    base = imgs[0]  # resolution sweep uses one base image (B4)
-
-    rows = []
+    base = load_images()[0]  # resolution sweep uses one base image (B4)
     failed = {}
+
+    # Phase A --- MEMORY FIRST, while this process is still light (no model loaded in it yet),
+    # so each isolated subprocess probe reports only its own model (see memory_rows()).
+    mem_by_model = {}
     for key in keys:
-        spec = REGISTRY[key]
-        mark = len(rows)  # roll back to here if this model fails mid-sweep
         try:
-            for resolution in RESOLUTIONS:
-                rows.extend(run_model(spec, base, device=args.device,
-                                      resolution=resolution, iters=args.iters, warmup=args.warmup))
-        except Exception as exc:  # one model's failure must not abort the whole campaign
-            del rows[mark:]  # drop any partial rows so a skipped model leaves none
+            mem_by_model[key] = memory_rows(REGISTRY[key], device=args.device, resolutions=RESOLUTIONS)
+        except Exception as exc:
             failed[key] = repr(exc)
-            print(f"[skip] {key}: {exc}")
+            print(f"[skip] {key} (memory): {exc}")
+
+    # Phase B --- latency/throughput/cold-start in-process (this makes the process heavy, but
+    # memory is already captured). Only models that passed Phase A are attempted.
+    lat_by_model = {}
+    for key in [k for k in keys if k not in failed]:
+        try:
+            lat_by_model[key] = [
+                r for resolution in RESOLUTIONS
+                for r in run_model(REGISTRY[key], base, device=args.device,
+                                   resolution=resolution, iters=args.iters, warmup=args.warmup)
+            ]
+        except Exception as exc:
+            failed[key] = repr(exc)
+            print(f"[skip] {key} (latency): {exc}")
+
+    # Emit only models that survived BOTH phases (skipped == no data).
+    rows = []
+    for key in keys:
+        if key in failed:
+            continue
+        rows.extend(lat_by_model.get(key, []))
+        rows.extend(mem_by_model.get(key, []))
 
     write_csv(rows, out / f"results_{args.device}.csv")
     with open(out / f"manifest_{args.device}.json", "w") as f:
