@@ -29,3 +29,20 @@ produced `data/phase2/results_cpu.csv` locally produces the GPU CSV on Colab. Pl
 
 Once both `results_cpu.csv` and `results_cuda.csv` exist, Plan 2b generates the final
 figures and writes the Results tables in the report.
+
+## Phase 2c — latency distribution (GPU)
+
+After the main campaign above, run the distribution pass on the same T4 to get the GPU
+percentiles and box-plot data:
+
+```
+!python -m benchmark.run_dist --device cuda
+```
+
+This downloads the `coco128` image set (~7 MB) on first use and writes
+`data/phase2/results_dist_cuda.csv` + `manifest_dist_cuda.json` (100 per-image latency
+samples per model at 640 px). Like the main run it is resilient — a failing model is
+skipped with a `[skip]` line and the others still write. Download both files and commit
+them next to the CPU distribution files (`data/phase2/results_dist_cpu.csv`,
+`manifest_dist_cpu.json`). Plan B (paper integration) then renders the distribution table
+and box-plot from both CSVs.
